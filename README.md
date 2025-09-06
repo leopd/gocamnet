@@ -6,6 +6,7 @@ A Go executable that demonstrates OpenCV integration for computer vision tasks.
 
 - Generate sample images using OpenCV
 - Display OpenCV windows with custom content
+- Display the primary camera feed
 - Command-line argument parsing with both long and short forms
 - Input validation
 
@@ -22,6 +23,9 @@ make run-sample-image
 
 # Display a window for 5 seconds
 make run-window seconds=5
+
+# Display the primary camera feed (press any key to exit)
+make run-camera
 
 # Show help for CLI flags
 ./gocamnet -h
@@ -46,6 +50,9 @@ make run-sample-image
 
 # Display a window
 make run-window
+
+# Display the primary camera feed
+make run-camera
 
 # Build for different platforms (example)
 GOOS=linux GOARCH=amd64 make build

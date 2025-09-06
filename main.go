@@ -14,25 +14,30 @@ import (
 func main() {
 	var sampleImage bool
 	var showWindow bool
+	var showCamera bool
 	var seconds int
 	
 	flag.BoolVar(&sampleImage, "sample-image", false, "Output a sample image using OpenCV and exit")
 	flag.BoolVar(&showWindow, "show-window", false, "Display a window using OpenCV")
+	flag.BoolVar(&showCamera, "show-camera", false, "Display the primary camera feed; press any key to exit")
 	flag.IntVar(&seconds, "seconds", 10, "Number of seconds to show window")
 	flag.IntVar(&seconds, "s", 10, "Number of seconds to show window (short form)")
 	flag.Parse()
-
-	if seconds <= 0 {
-		fmt.Fprintf(os.Stderr, "Error: seconds must be a positive integer, got %d\n", seconds)
-		os.Exit(1)
-	}
 
 	if sampleImage {
 		runSampleImage()
 		return
 	}
 	if showWindow {
+		if seconds <= 0 {
+			fmt.Fprintf(os.Stderr, "Error: seconds must be a positive integer, got %d\n", seconds)
+			os.Exit(1)
+		}
 		runShowWindow(seconds)
+		return
+	}
+	if showCamera {
+		runShowCamera()
 		return
 	}
 
@@ -84,4 +89,45 @@ func runShowWindow(seconds int) {
 	}
 
 	fmt.Println("Window closed")
+}
+
+// runShowCamera opens the default camera and displays its feed until a key is pressed
+func runShowCamera() {
+	fmt.Println("Opening default camera (device 0)...")
+
+	webcam, err := gocv.OpenVideoCapture(0)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error opening video capture device: %v\n", err)
+		os.Exit(1)
+	}
+	defer webcam.Close()
+
+	if !webcam.IsOpened() {
+		fmt.Fprintln(os.Stderr, "Error: video capture device not opened")
+		os.Exit(1)
+	}
+
+	win := gocv.NewWindow("GoCamNet Camera")
+	defer win.Close()
+
+	img := gocv.NewMat()
+	defer img.Close()
+
+	for {
+		if ok := webcam.Read(&img); !ok {
+			fmt.Fprintln(os.Stderr, "Device closed or frame read failed")
+			break
+		}
+		if img.Empty() {
+			continue
+		}
+
+		win.IMShow(img)
+		// WaitKey returns the key code if a key was pressed, -1 otherwise
+		if key := win.WaitKey(1); key >= 0 {
+			break
+		}
+	}
+
+	fmt.Println("Camera window closed")
 }
