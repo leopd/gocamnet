@@ -123,6 +123,10 @@ func runShowCamera() {
 
 	fmt.Println("Camera opened successfully. Press any key to exit...")
 
+	// FPS tracking variables
+	frameCount := 0
+	lastReportTime := time.Now()
+
 	for {
 		if ok := webcam.Read(&img); !ok {
 			fmt.Fprintln(os.Stderr, "Device closed or frame read failed")
@@ -133,6 +137,21 @@ func runShowCamera() {
 		}
 
 		win.IMShow(img)
+		
+		// Increment frame count
+		frameCount++
+		
+		// Check if 5 seconds have passed since last report
+		currentTime := time.Now()
+		if currentTime.Sub(lastReportTime) >= 5*time.Second {
+			elapsed := currentTime.Sub(lastReportTime)
+			fps := float64(frameCount) / elapsed.Seconds()
+			fmt.Printf("FPS: %.2f (frames: %d, elapsed: %.1fs)\n", fps, frameCount, elapsed.Seconds())
+			// Reset frame count and update last report time
+			frameCount = 0
+			lastReportTime = currentTime
+		}
+		
 		// WaitKey returns the key code if a key was pressed, -1 otherwise
 		// Use a longer wait time to reduce CPU usage
 		if key := win.WaitKey(30); key >= 0 {
