@@ -36,3 +36,19 @@ go run main.go -seconds 3
 GOOS=linux GOARCH=amd64 go build -o gocamnet-linux
 GOOS=windows GOARCH=amd64 go build -o gocamnet.exe
 ```
+
+## Testing
+
+```bash
+# Run all tests
+go test
+
+# Run tests with verbose output
+go test -v
+
+# Run tests with coverage
+go test -cover
+
+# Run specific test
+go test -run TestRunCountdown
+```

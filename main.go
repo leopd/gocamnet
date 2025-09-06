@@ -33,9 +33,7 @@ func runCountdown(seconds int) {
 
 	for i := 1; i <= seconds; i++ {
 		fmt.Printf("Count: %d\n", i)
-		if i < seconds {
-			time.Sleep(1 * time.Second)
-		}
+		time.Sleep(1 * time.Second)
 	}
 
 	fmt.Println("Countdown complete!")
