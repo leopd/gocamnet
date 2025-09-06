@@ -26,7 +26,7 @@ ifneq ($(s),)
   RUN_ARGS += -s $(s)
 endif
 
-.PHONY: all build run run-opencv test clean install
+.PHONY: all build run run-sample-image run-window test clean install
 
 all: build
 
@@ -36,8 +36,11 @@ build:
 run:
 	./$(NAME) $(RUN_ARGS)
 
-run-opencv:
-	./$(NAME) --opencv $(RUN_ARGS)
+run-sample-image:
+	./$(NAME) --sample-image $(RUN_ARGS)
+
+run-window:
+	./$(NAME) --show-window $(RUN_ARGS)
 
 test:
 	go test -v ./...
