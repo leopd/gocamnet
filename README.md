@@ -36,14 +36,3 @@ go run main.go -seconds 3
 GOOS=linux GOARCH=amd64 go build -o gocamnet-linux
 GOOS=windows GOARCH=amd64 go build -o gocamnet.exe
 ```
-
-## Project Structure
-
-```
-gocamnet/
-├── main.go          # Main application entry point
-├── go.mod           # Go module definition
-├── .gitignore       # Git ignore patterns
-└── README.md        # This file
-```
-
