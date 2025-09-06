@@ -26,7 +26,7 @@ ifneq ($(s),)
   RUN_ARGS += -s $(s)
 endif
 
-.PHONY: all build run run-sample-image run-window run-camera list-cameras test clean install
+.PHONY: all build run run-sample-image run-camera list-cameras test clean install
 
 all: build
 
@@ -42,9 +42,6 @@ run:
 
 run-sample-image:
 	./$(NAME) --sample-image $(RUN_ARGS)
-
-run-window:
-	./$(NAME) --show-window $(RUN_ARGS)
 
 run-camera:
 	./$(NAME) --show-camera $(RUN_ARGS)

@@ -14,19 +14,14 @@ import (
 
 func main() {
 	var sampleImage bool
-	var showWindow bool
 	var showCamera bool
 	var listCameras bool
 	var cameraIndex int
-	var seconds int
 	
 	flag.BoolVar(&sampleImage, "sample-image", false, "Output a sample image using OpenCV and exit")
-	flag.BoolVar(&showWindow, "show-window", false, "Display a window using OpenCV")
 	flag.BoolVar(&showCamera, "show-camera", false, "Display the primary camera feed; press any key to exit")
 	flag.BoolVar(&listCameras, "list-cameras", false, "List available cameras and exit")
 	flag.IntVar(&cameraIndex, "camera", 0, "Camera index to use (use --list-cameras to see available cameras)")
-	flag.IntVar(&seconds, "seconds", 10, "Number of seconds to show window")
-	flag.IntVar(&seconds, "s", 10, "Number of seconds to show window (short form)")
 	flag.Parse()
 
 	if sampleImage {
@@ -35,14 +30,6 @@ func main() {
 	}
 	if listCameras {
 		listAvailableCameras()
-		return
-	}
-	if showWindow {
-		if seconds <= 0 {
-			fmt.Fprintf(os.Stderr, "Error: seconds must be a positive integer, got %d\n", seconds)
-			os.Exit(1)
-		}
-		runShowWindow(seconds)
 		return
 	}
 	if showCamera {
@@ -76,29 +63,6 @@ func runSampleImage() {
 	fmt.Printf("Image successfully written to %s\n", outputFile)
 }
 
-// runShowWindow opens a window and displays a sample image for the given duration
-func runShowWindow(seconds int) {
-	fmt.Printf("Showing window for %d seconds...\n", seconds)
-
-	img := gocv.NewMatWithSize(300, 480, gocv.MatTypeCV8UC3)
-	defer img.Close()
-	img.SetTo(gocv.NewScalar(255, 255, 255, 0))
-	gocv.Rectangle(&img, image.Rect(80, 80, 400, 220), color.RGBA{B: 255, A: 255}, 3)
-	gocv.PutText(&img, "GoCamNet", image.Pt(120, 160), gocv.FontHersheySimplex, 1.0, color.RGBA{R: 255, A: 255}, 2)
-
-	win := gocv.NewWindow("GoCamNet Sample")
-	defer win.Close()
-
-	end := time.Now().Add(time.Duration(seconds) * time.Second)
-	for time.Now().Before(end) {
-		win.IMShow(img)
-		if key := win.WaitKey(10); key >= 0 {
-			break
-		}
-	}
-
-	fmt.Println("Window closed")
-}
 
 // listAvailableCameras tests cameras 0-9 and lists which ones are available
 func listAvailableCameras() {
@@ -155,6 +119,12 @@ func runShowCamera(cameraIndex int) {
 		fmt.Fprintln(os.Stderr, "Error: video capture device not opened")
 		os.Exit(1)
 	}
+
+	// Optimize camera settings for higher FPS
+	webcam.Set(gocv.VideoCaptureFPS, 30)        // Set target FPS to 30
+	webcam.Set(gocv.VideoCaptureFrameWidth, 640) // Set reasonable resolution
+	webcam.Set(gocv.VideoCaptureFrameHeight, 480)
+	webcam.Set(gocv.VideoCaptureBufferSize, 1)   // Minimize buffer to reduce latency
 
 	img := gocv.NewMat()
 	defer img.Close()

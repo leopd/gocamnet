@@ -5,7 +5,6 @@ A Go executable that demonstrates OpenCV integration for computer vision tasks.
 ## Features
 
 - Generate sample images using OpenCV
-- Display OpenCV windows with custom content
 - Display the primary camera feed
 - Command-line argument parsing with both long and short forms
 - Input validation
@@ -20,9 +19,6 @@ make build
 
 # Generate a sample image
 make run-sample-image
-
-# Display a window for 5 seconds
-make run-window seconds=5
 
 # Display the primary camera feed (press any key to exit)
 make run-camera
@@ -54,9 +50,6 @@ make build
 # Generate a sample image
 make run-sample-image
 
-# Display a window
-make run-window
-
 # Display the primary camera feed
 make run-camera
 
@@ -87,6 +80,11 @@ gocamnet/
 ├── go.mod           # Go module definition
 ├── .gitignore       # Git ignore patterns
 ├── README.md        # This file
+├── AGENT.md         # Instructions for AI agents
 ├── Makefile         # Project build, run, and test commands
 └── setup-mac.sh     # Script to install macOS dependencies
 ```
+
+## For AI Agents
+
+**IMPORTANT**: All AI agents working on this project must read the [AGENT.md](AGENT.md) file before making any changes. This file contains critical instructions that must be followed for every modification to ensure code quality and proper documentation.
