@@ -14,10 +14,18 @@ import (
 func main() {
 	var sampleImage bool
 	var showWindow bool
+	var seconds int
+	
 	flag.BoolVar(&sampleImage, "sample-image", false, "Output a sample image using OpenCV and exit")
 	flag.BoolVar(&showWindow, "show-window", false, "Display a window using OpenCV")
+	flag.IntVar(&seconds, "seconds", 10, "Number of seconds to show window")
+	flag.IntVar(&seconds, "s", 10, "Number of seconds to show window (short form)")
+	flag.Parse()
 
-	seconds := parseCLIArgs()
+	if seconds <= 0 {
+		fmt.Fprintf(os.Stderr, "Error: seconds must be a positive integer, got %d\n", seconds)
+		os.Exit(1)
+	}
 
 	if sampleImage {
 		runSampleImage()
@@ -28,34 +36,8 @@ func main() {
 		return
 	}
 
-	runCountdown(seconds)
-}
-
-// parseCLIArgs handles command line argument parsing and validation
-func parseCLIArgs() int {
-	var seconds int
-	flag.IntVar(&seconds, "seconds", 10, "Number of seconds to count or show window")
-	flag.IntVar(&seconds, "s", 10, "Number of seconds to count or show window (short form)")
-	flag.Parse()
-
-	if seconds <= 0 {
-		fmt.Fprintf(os.Stderr, "Error: seconds must be a positive integer, got %d\n", seconds)
-		os.Exit(1)
-	}
-
-	return seconds
-}
-
-// runCountdown performs the actual countdown and printing
-func runCountdown(seconds int) {
-	fmt.Printf("Starting countdown for %d seconds...\n", seconds)
-
-	for i := 1; i <= seconds; i++ {
-		fmt.Printf("Count: %d\n", i)
-		time.Sleep(1 * time.Second)
-	}
-
-	fmt.Println("Countdown complete!")
+	// Default behavior: show help
+	flag.Usage()
 }
 
 // runSampleImage writes a simple sample image using OpenCV

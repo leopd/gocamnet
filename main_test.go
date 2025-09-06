@@ -1,35 +1,65 @@
 package main
 
 import (
+	"os"
 	"testing"
-	"time"
+
+	"gocv.io/x/gocv"
 )
 
-func TestRunCountdown(t *testing.T) {
-	// Test with 2 seconds
-	seconds := 2
-	
-	// Capture start time
-	start := time.Now()
-	
-	// Run the countdown
-	runCountdown(seconds)
-	
-	// Calculate elapsed time
-	elapsed := time.Since(start)
-	
-	// Check that elapsed time is between 1.9 and 2.1 seconds
-	// For 2 seconds: count 1, sleep 1s, count 2, sleep 1s = ~2 seconds total
-	expectedMin := 1900 * time.Millisecond
-	expectedMax := 2100 * time.Millisecond
-	
-	if elapsed < expectedMin {
-		t.Errorf("Countdown took %v, expected at least %v", elapsed, expectedMin)
+func TestRunSampleImage(t *testing.T) {
+	// Clean up any existing output file
+	os.Remove("output.jpg")
+	defer os.Remove("output.jpg")
+
+	// Run the sample image function
+	runSampleImage()
+
+	// Check that the file was created
+	if _, err := os.Stat("output.jpg"); os.IsNotExist(err) {
+		t.Fatal("output.jpg was not created")
 	}
-	
-	if elapsed > expectedMax {
-		t.Errorf("Countdown took %v, expected at most %v", elapsed, expectedMax)
+
+	// Load the image using GoCV
+	img := gocv.IMRead("output.jpg", gocv.IMReadColor)
+	if img.Empty() {
+		t.Fatal("Failed to load output.jpg as a valid image")
 	}
-	
-	t.Logf("Countdown completed in %v (expected ~2 seconds)", elapsed)
+	defer img.Close()
+
+	// Check image dimensions
+	if img.Rows() != 200 || img.Cols() != 300 {
+		t.Errorf("Expected image size 200x300, got %dx%d", img.Rows(), img.Cols())
+	}
+
+	// Check that it's a 3-channel image
+	if img.Channels() != 3 {
+		t.Errorf("Expected 3 channels, got %d", img.Channels())
+	}
+
+	// Count green pixels (BGR format: green is channel 1)
+	greenPixels := 0
+	totalPixels := img.Rows() * img.Cols()
+
+	for y := 0; y < img.Rows(); y++ {
+		for x := 0; x < img.Cols(); x++ {
+			// Get BGR values
+			b := img.GetUCharAt(y, x*3+0)
+			g := img.GetUCharAt(y, x*3+1)
+			r := img.GetUCharAt(y, x*3+2)
+
+			// Check if pixel is green (high green, low red and blue)
+			if g > 200 && r < 100 && b < 100 {
+				greenPixels++
+			}
+		}
+	}
+
+	greenPercentage := float64(greenPixels) / float64(totalPixels) * 100
+	t.Logf("Green pixels: %d/%d (%.1f%%)", greenPixels, totalPixels, greenPercentage)
+
+	// Check that at least 20% of pixels are green
+	if greenPercentage < 20.0 {
+		t.Errorf("Expected at least 20%% green pixels, got %.1f%%", greenPercentage)
+	}
 }

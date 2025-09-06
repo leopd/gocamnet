@@ -1,11 +1,11 @@
 # GoCamNet
 
-A Go executable that demonstrates CLI argument parsing and timing functionality.
+A Go executable that demonstrates OpenCV integration for computer vision tasks.
 
 ## Features
 
-- Counts from 1 to N seconds (where N is a CLI parameter)
-- Displays count every second
+- Generate sample images using OpenCV
+- Display OpenCV windows with custom content
 - Command-line argument parsing with both long and short forms
 - Input validation
 
@@ -17,15 +17,11 @@ This project uses a `Makefile` to simplify common operations.
 # Build the executable
 make build
 
-# Run with default 10 seconds
-make run
+# Generate a sample image
+make run-sample-image
 
-# Run with custom number of seconds
-make run seconds=5
-make run s=15
-
-# Run the OpenCV example
-make run-opencv
+# Display a window for 5 seconds
+make run-window seconds=5
 
 # Show help for CLI flags
 ./gocamnet -h
@@ -45,11 +41,11 @@ make install
 # Build the executable for current platform
 make build
 
-# Run the executable
-make run
+# Generate a sample image
+make run-sample-image
 
-# Run the OpenCV example
-make run-opencv
+# Display a window
+make run-window
 
 # Build for different platforms (example)
 GOOS=linux GOARCH=amd64 make build
