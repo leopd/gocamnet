@@ -16,17 +16,25 @@ func main() {
 	var sampleImage bool
 	var showWindow bool
 	var showCamera bool
+	var listCameras bool
+	var cameraIndex int
 	var seconds int
 	
 	flag.BoolVar(&sampleImage, "sample-image", false, "Output a sample image using OpenCV and exit")
 	flag.BoolVar(&showWindow, "show-window", false, "Display a window using OpenCV")
 	flag.BoolVar(&showCamera, "show-camera", false, "Display the primary camera feed; press any key to exit")
+	flag.BoolVar(&listCameras, "list-cameras", false, "List available cameras and exit")
+	flag.IntVar(&cameraIndex, "camera", 0, "Camera index to use (use --list-cameras to see available cameras)")
 	flag.IntVar(&seconds, "seconds", 10, "Number of seconds to show window")
 	flag.IntVar(&seconds, "s", 10, "Number of seconds to show window (short form)")
 	flag.Parse()
 
 	if sampleImage {
 		runSampleImage()
+		return
+	}
+	if listCameras {
+		listAvailableCameras()
 		return
 	}
 	if showWindow {
@@ -38,7 +46,7 @@ func main() {
 		return
 	}
 	if showCamera {
-		runShowCamera()
+		runShowCamera(cameraIndex)
 		return
 	}
 
@@ -92,9 +100,39 @@ func runShowWindow(seconds int) {
 	fmt.Println("Window closed")
 }
 
-// runShowCamera opens the default camera and displays its feed until a key is pressed
-func runShowCamera() {
-	fmt.Println("Opening default camera (device 0)...")
+// listAvailableCameras tests cameras 0-9 and lists which ones are available
+func listAvailableCameras() {
+	fmt.Println("Scanning for available cameras...")
+	fmt.Println()
+	
+	availableCameras := []int{}
+	
+	// Test cameras 0-9
+	for i := 0; i < 10; i++ {
+		webcam, err := gocv.OpenVideoCapture(i)
+		if err == nil && webcam.IsOpened() {
+			availableCameras = append(availableCameras, i)
+			webcam.Close()
+		}
+	}
+	
+	if len(availableCameras) == 0 {
+		fmt.Println("No cameras found.")
+		return
+	}
+	
+	fmt.Printf("Found %d available camera(s):\n", len(availableCameras))
+	for _, index := range availableCameras {
+		fmt.Printf("  Camera %d\n", index)
+	}
+	fmt.Println()
+	fmt.Println("Use --camera <index> to select a specific camera.")
+	fmt.Println("Example: ./gocamnet --show-camera --camera 1")
+}
+
+// runShowCamera opens the specified camera and displays its feed until a key is pressed
+func runShowCamera(cameraIndex int) {
+	fmt.Printf("Opening camera %d...\n", cameraIndex)
 
 	// On macOS, ensure we're on the main thread for UI operations
 	if runtime.GOOS == "darwin" {
@@ -106,7 +144,7 @@ func runShowCamera() {
 	win := gocv.NewWindow("GoCamNet Camera")
 	defer win.Close()
 
-	webcam, err := gocv.OpenVideoCapture(0)
+	webcam, err := gocv.OpenVideoCapture(cameraIndex)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error opening video capture device: %v\n", err)
 		os.Exit(1)

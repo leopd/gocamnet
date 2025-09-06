@@ -27,6 +27,12 @@ make run-window seconds=5
 # Display the primary camera feed (press any key to exit)
 make run-camera
 
+# List available cameras
+make list-cameras
+
+# Use a specific camera (e.g., camera 1)
+./gocamnet --show-camera --camera 1
+
 # Show help for CLI flags
 ./gocamnet -h
 ```
@@ -53,6 +59,9 @@ make run-window
 
 # Display the primary camera feed
 make run-camera
+
+# List available cameras
+make list-cameras
 
 # Build for different platforms (example)
 GOOS=linux GOARCH=amd64 make build

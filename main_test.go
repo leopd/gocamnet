@@ -63,3 +63,22 @@ func TestRunSampleImage(t *testing.T) {
 		t.Errorf("Expected at least 20%% green pixels, got %.1f%%", greenPercentage)
 	}
 }
+
+func TestListAvailableCameras(t *testing.T) {
+	// Test that listAvailableCameras runs without panicking
+	// This function scans cameras 0-9 and prints available ones
+	// We just need to ensure it doesn't crash
+	
+	// Capture any potential panic
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("listAvailableCameras panicked: %v", r)
+		}
+	}()
+	
+	// Run the function - it should complete without error
+	listAvailableCameras()
+	
+	// If we get here, the function completed successfully
+	t.Log("listAvailableCameras completed without error")
+}
