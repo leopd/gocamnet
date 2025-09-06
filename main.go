@@ -55,11 +55,15 @@ func runCountdown(seconds int) {
 func runOpenCVExample() {
 	fmt.Println("Running OpenCV example...")
 
-	img := gocv.NewMatWithSize(200, 300, gocv.MatTypeCV8U)
+	// Create a 3-channel (BGR) image so colors render correctly
+	img := gocv.NewMatWithSize(200, 300, gocv.MatTypeCV8UC3)
 	defer img.Close()
 
-	// Draw a green rectangle
-	gocv.Rectangle(&img, image.Rect(50, 50, 250, 150), color.RGBA{0, 255, 0, 255}, 2)
+	// Set a white background for visibility
+	img.SetTo(gocv.NewScalar(255, 255, 255, 0)) // B, G, R, A
+
+	// Draw a filled green rectangle
+	gocv.Rectangle(&img, image.Rect(50, 50, 250, 150), color.RGBA{G: 255, A: 255}, -1)
 
 	outputFile := "output.jpg"
 	if ok := gocv.IMWrite(outputFile, img); !ok {

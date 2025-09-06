@@ -1,5 +1,30 @@
 NAME := gocamnet
 OS := $(shell uname -s)
+ARCH := $(shell uname -m)
+
+# Configure environment for macOS arm64 (Apple Silicon)
+ifeq ($(OS),Darwin)
+  ifeq ($(ARCH),arm64)
+    export GOOS := darwin
+    export GOARCH := arm64
+    export CGO_ENABLED := 1
+    export CC := clang
+    export CXX := clang++
+    export CGO_CFLAGS := -O2 -g -arch arm64
+    export CGO_CXXFLAGS := -O2 -g -arch arm64
+    export CGO_LDFLAGS := -O2 -g -arch arm64
+    export PKG_CONFIG_PATH := $(shell brew --prefix opencv)/lib/pkgconfig:$(PKG_CONFIG_PATH)
+  endif
+endif
+
+# Build dynamic CLI args from make variables (e.g., `make run seconds=5` or `make run s=5`)
+RUN_ARGS :=
+ifneq ($(seconds),)
+  RUN_ARGS += -seconds $(seconds)
+endif
+ifneq ($(s),)
+  RUN_ARGS += -s $(s)
+endif
 
 .PHONY: all build run run-opencv test clean install
 
@@ -9,10 +34,10 @@ build:
 	go build -o $(NAME)
 
 run:
-	./$(NAME)
+	./$(NAME) $(RUN_ARGS)
 
 run-opencv:
-	./$(NAME) --opencv
+	./$(NAME) --opencv $(RUN_ARGS)
 
 test:
 	go test -v ./...
@@ -20,7 +45,6 @@ test:
 install:
 ifeq ($(OS), Darwin)
 	@echo "Running macOS setup script..."
-	@chmod +x setup-mac.sh
 	@./setup-mac.sh
 else
 	@echo "Installation for $(OS) is not yet implemented."
