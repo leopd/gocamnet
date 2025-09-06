@@ -149,7 +149,7 @@ func runShowCamera(cameraIndex int) {
 		// Increment frame count
 		frameCount++
 		
-		// Check if 5 seconds have passed since last report
+		// Check if 5 seconds have passed since last report (less frequent for performance)
 		currentTime := time.Now()
 		if currentTime.Sub(lastReportTime) >= 5*time.Second {
 			elapsed := currentTime.Sub(lastReportTime)
@@ -161,8 +161,8 @@ func runShowCamera(cameraIndex int) {
 		}
 		
 		// WaitKey returns the key code if a key was pressed, -1 otherwise
-		// Use a longer wait time to reduce CPU usage
-		if key := win.WaitKey(30); key >= 0 {
+		// Use minimal wait time for maximum FPS - this was the main bottleneck!
+		if key := win.WaitKey(1); key >= 0 {
 			break
 		}
 	}

@@ -5,7 +5,9 @@ A Go executable that demonstrates OpenCV integration for computer vision tasks.
 ## Features
 
 - Generate sample images using OpenCV
-- Display the primary camera feed
+- Display the primary camera feed with optimized performance (30+ FPS)
+- Real-time FPS monitoring and reporting
+- Camera selection and discovery
 - Command-line argument parsing with both long and short forms
 - Input validation
 
