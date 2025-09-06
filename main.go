@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"os"
+	"runtime"
 	"time"
 
 	"gocv.io/x/gocv"
@@ -95,6 +96,16 @@ func runShowWindow(seconds int) {
 func runShowCamera() {
 	fmt.Println("Opening default camera (device 0)...")
 
+	// On macOS, ensure we're on the main thread for UI operations
+	if runtime.GOOS == "darwin" {
+		runtime.LockOSThread()
+		defer runtime.UnlockOSThread()
+	}
+
+	// Initialize OpenCV window first to ensure it's created on the main thread
+	win := gocv.NewWindow("GoCamNet Camera")
+	defer win.Close()
+
 	webcam, err := gocv.OpenVideoCapture(0)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error opening video capture device: %v\n", err)
@@ -107,11 +118,10 @@ func runShowCamera() {
 		os.Exit(1)
 	}
 
-	win := gocv.NewWindow("GoCamNet Camera")
-	defer win.Close()
-
 	img := gocv.NewMat()
 	defer img.Close()
+
+	fmt.Println("Camera opened successfully. Press any key to exit...")
 
 	for {
 		if ok := webcam.Read(&img); !ok {
@@ -124,7 +134,8 @@ func runShowCamera() {
 
 		win.IMShow(img)
 		// WaitKey returns the key code if a key was pressed, -1 otherwise
-		if key := win.WaitKey(1); key >= 0 {
+		// Use a longer wait time to reduce CPU usage
+		if key := win.WaitKey(30); key >= 0 {
 			break
 		}
 	}

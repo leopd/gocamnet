@@ -31,7 +31,11 @@ endif
 all: build
 
 build:
+ifeq ($(OS), Darwin)
+	go build -ldflags="-s -w" -o $(NAME)
+else
 	go build -o $(NAME)
+endif
 
 run:
 	./$(NAME) $(RUN_ARGS)
