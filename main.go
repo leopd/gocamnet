@@ -3,13 +3,25 @@ package main
 import (
 	"flag"
 	"fmt"
+	"image"
+	"image/color"
 	"os"
 	"time"
+
+	"gocv.io/x/gocv"
 )
 
 func main() {
+	var runOpenCV bool
+	flag.BoolVar(&runOpenCV, "opencv", false, "Run OpenCV example instead of countdown")
+
 	seconds := parseCLIArgs()
-	runCountdown(seconds)
+
+	if runOpenCV {
+		runOpenCVExample()
+	} else {
+		runCountdown(seconds)
+	}
 }
 
 // parseCLIArgs handles command line argument parsing and validation
@@ -37,4 +49,22 @@ func runCountdown(seconds int) {
 	}
 
 	fmt.Println("Countdown complete!")
+}
+
+// runOpenCVExample demonstrates a basic OpenCV image operation
+func runOpenCVExample() {
+	fmt.Println("Running OpenCV example...")
+
+	img := gocv.NewMatWithSize(200, 300, gocv.MatTypeCV8U)
+	defer img.Close()
+
+	// Draw a green rectangle
+	gocv.Rectangle(&img, image.Rect(50, 50, 250, 150), color.RGBA{0, 255, 0, 255}, 2)
+
+	outputFile := "output.jpg"
+	if ok := gocv.IMWrite(outputFile, img); !ok {
+		fmt.Printf("Error writing image: %s\n", outputFile)
+		os.Exit(1)
+	}
+	fmt.Printf("Image successfully written to %s\n", outputFile)
 }

@@ -22,8 +22,19 @@ go build -o gocamnet
 ./gocamnet -seconds 5
 ./gocamnet -s 15
 
+# Run the OpenCV example
+./gocamnet --opencv
+
 # Show help
 ./gocamnet -h
+```
+
+## Setup (macOS)
+
+To set up the development environment and install dependencies like OpenCV 4, run the macOS setup script:
+
+```bash
+./setup-mac.sh
 ```
 
 ## Development
