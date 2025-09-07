@@ -1,116 +1,13 @@
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+# Binaries
+*.caffemodel
+*.pb
+*.weights
+*.onnx
+*.tar.gz
 
-# Project-specific executables (Unix/Linux/macOS)
-gocamnet
-
-# Test binary, built with `go test -c`
-*.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
-
-# Generated artifacts
-output.jpg
-
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-# Go workspace file
-go.work
-
-# Build output
-/build/
-/dist/
-/bin/
-
-# IDE and editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS generated files
+# macOS files
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
 
-# Logs
-*.log
-logs/
-
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Temporary files
-tmp/
-temp/
-*.tmp
-
-# Coverage reports
-coverage.txt
-coverage.html
-coverage.out
-
-# Profiling data
-*.prof
-*.pprof
-
-# Air live reload (if using air for development)
-tmp/
-
-# Go modules proxy cache
-$GOPATH/pkg/mod/
-
-# Go build cache
-$GOPATH/pkg/
-
-# Local configuration files
-config.local.*
-*.local
-
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-
-# Docker
-.dockerignore
-Dockerfile.local
-
-# Kubernetes
-*.kubeconfig
-
-# Terraform
-*.tfstate
-*.tfstate.*
-.terraform/
-.terraform.lock.hcl
-
-# Secrets and sensitive files
-secrets/
-*.pem
-*.key
-*.crt
-*.p12
-*.pfx
-
-# Backup files
-*.bak
-*.backup
-
-# ML Models (downloaded at build time)
-models/
+# GoCamNet executable
+gocamnet
+output.jpg

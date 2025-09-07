@@ -45,33 +45,34 @@ make install
 
 ## Development
 
-```bash
-# Build the executable for current platform
+This project uses GoCV, which requires OpenCV to be installed on your system. Please see `setup-mac.sh` for macOS instructions.
+
+Build the project using the Makefile:
+```sh
 make build
-
-# Generate a sample image
-make run-sample-image
-
-# Display the primary camera feed
-make run-camera
-
-# List available cameras
-make list-cameras
-
-# Build for different platforms (example)
-GOOS=linux GOARCH=amd64 make build
-GOOS=windows GOARCH=amd64 make build
 ```
 
 ## Testing
 
-```bash
-# Run all tests with verbose output
-make test
+The test suite includes a Deep Neural Network (DNN) based test that requires a pre-trained model. Due to the instability of public model download links, you must download the required model files manually.
 
-# Run tests with coverage
-make test -cover
-```
+**To run the full test suite:**
+
+1.  **Download Model Files:**
+    *   The required model architecture file, `MobileNetSSD_deploy.prototxt`, is included in this repository in the `models/` directory.
+    *   You only need to download the corresponding model weights file: `MobileNetSSD_deploy.caffemodel`.
+    *   A reliable source for this file is the repository at: `https://github.com/chuanqi305/MobileNet-SSD`
+
+2.  **Place Files:**
+    *   Ensure the `models/` directory contains both `MobileNetSSD_deploy.prototxt` (included) and `MobileNetSSD_deploy.caffemodel` (which you downloaded).
+
+3.  **Run Tests:**
+    Once both model files are in place, run the tests using the Makefile:
+    ```sh
+    make test
+    ```
+
+Without the model files, the DNN test will be automatically skipped.
 
 ## Project Structure
 

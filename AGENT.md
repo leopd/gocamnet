@@ -69,6 +69,14 @@ gocamnet/
 - Never use `chmod` at runtime - executable bit is stored in git
 - Camera functionality requires proper permissions on macOS
 
+## CGO/OpenCV environment: Always use the Makefile
+
+- Always run builds and tests via the Makefile so required CGO/OpenCV environment variables are set.
+- Do NOT run `go build` or `go test` directly. Use:
+  - `make build`
+  - `make test`
+- Rationale: the Makefile exports `GOOS`, `GOARCH`, `CGO_ENABLED`, `CC`, `CXX`, `CGO_*FLAGS`, and sets `PKG_CONFIG_PATH` (e.g., to Homebrew's OpenCV on macOS arm64). Running `go test` directly may fail to link OpenCV even though `make test` works.
+
 ## REMINDER
 
 **EVERY AI AGENT MUST:**
