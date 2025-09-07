@@ -15,9 +15,36 @@ FMT_BGR = 0
 def load_model(mock: bool):
     if mock:
         return None
+    
+    # Load YOLO model
     model = YOLO("yolov8n.pt")
+    
+    # Move to appropriate device
     if torch.backends.mps.is_available():
         model.to("mps")
+        device = "mps"
+    elif torch.cuda.is_available():
+        model.to("cuda")
+        device = "cuda"
+    else:
+        device = "cpu"
+    
+    # Optimize model for inference
+    model.model.eval()  # Set to evaluation mode
+    
+    # Use torch.compile for PyTorch 2.0+ (significant speedup)
+    if hasattr(torch, 'compile') and device != "mps":  # MPS doesn't support compile yet
+        try:
+            model.model = torch.compile(model.model, mode="reduce-overhead")
+            print(f"Model compiled with torch.compile on {device}")
+        except Exception as e:
+            print(f"torch.compile failed: {e}, using regular model")
+    
+    # Enable optimizations
+    torch.backends.cudnn.benchmark = True if device == "cuda" else False
+    torch.backends.cudnn.deterministic = False if device == "cuda" else True
+    
+    print(f"Model loaded on {device} with optimizations")
     return model
 
 
@@ -50,7 +77,9 @@ def handle_client(conn, addr, model, score_thresh: float, mock: bool):
                 w2, h2 = int(w // 3), int(h // 3)
                 dets.append({"class_id": 0, "class_name": "person", "score": 0.99, "box": [10, 10, 10 + w2, 10 + h2]})
             else:
-                res = model(img, verbose=False)[0]
+                # Use torch.no_grad() for inference optimization
+                with torch.no_grad():
+                    res = model(img, verbose=False)[0]
                 names = res.names if hasattr(res, "names") else model.names
                 for b in res.boxes:
                     x1, y1, x2, y2 = map(int, b.xyxy[0].tolist())
