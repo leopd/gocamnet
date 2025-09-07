@@ -6,8 +6,11 @@ import (
 	"image"
 	"image/color"
 	"os"
+	"path/filepath"
 	"runtime"
 	"time"
+
+	"gocamnet/finder"
 
 	"gocv.io/x/gocv"
 )
@@ -98,6 +101,23 @@ func listAvailableCameras() {
 func runShowCamera(cameraIndex int) {
 	fmt.Printf("Opening camera %d...\n", cameraIndex)
 
+	// --- Initialize Person Detector ---
+	protoPath := filepath.Join("models", "MobileNetSSD_deploy.prototxt")
+	modelPath := filepath.Join("models", "MobileNetSSD_deploy.caffemodel")
+
+	detector, err := finder.NewDetector(finder.Options{
+		ModelProto:   protoPath,
+		ModelWeights: modelPath,
+	})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating detector: %v\n", err)
+		fmt.Fprintln(os.Stderr, "Please ensure the model files are present in the 'models' directory. See README.md for details.")
+		os.Exit(1)
+	}
+	defer detector.Close()
+	fmt.Println("Person detector loaded successfully.")
+	// --- End Detector Initialization ---
+
 	// On macOS, ensure we're on the main thread for UI operations
 	if runtime.GOOS == "darwin" {
 		runtime.LockOSThread()
@@ -143,6 +163,23 @@ func runShowCamera(cameraIndex int) {
 		if img.Empty() {
 			continue
 		}
+
+		// --- Perform Detection ---
+		detections, err := detector.Detect(img)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Detection error: %v\n", err)
+			continue // Don't crash, just skip this frame
+		}
+
+		// Draw boxes for detected people
+		personColor := color.RGBA{0, 255, 0, 255} // Green
+		for _, d := range detections {
+			if d.ClassID == 15 { // 15 is the class ID for "person" in MobileNet-SSD
+				fmt.Printf("Detected person with confidence %.2f\n", d.Score)
+				gocv.Rectangle(&img, d.Box, personColor, 2)
+			}
+		}
+		// --- End Detection ---
 
 		win.IMShow(img)
 		
