@@ -3,7 +3,6 @@ package finder
 import (
     "image"
     "os"
-    "path/filepath"
     "testing"
 
     "gocv.io/x/gocv"
@@ -15,7 +14,7 @@ func TestDetectorLoadsAndRuns(t *testing.T) {
     if os.Getenv("RUN_DNN_TEST") == "" {
         t.Skip("skipping DNN test by default; set RUN_DNN_TEST=1 to enable")
     }
-    modelPath := filepath.Join("..", "models", "yolov5s.onnx")
+    modelPath := "models/yolov5s.onnx"
     if _, err := os.Stat(modelPath); err != nil {
         t.Skip("model not found; run `make model` first: ", modelPath)
     }
@@ -33,6 +32,31 @@ func TestDetectorLoadsAndRuns(t *testing.T) {
 
     // No assertion on content; just ensure it returns (possibly zero detections).
     t.Logf("detections returned: %d", len(dets))
+}
+
+// TestBasicOpenCVWorks tests that basic OpenCV functionality works without DNN
+func TestBasicOpenCVWorks(t *testing.T) {
+    // Test that basic OpenCV functionality works without DNN
+    img := gocv.NewMatWithSize(100, 100, gocv.MatTypeCV8UC3)
+    defer img.Close()
+    
+    if img.Empty() {
+        t.Fatal("failed to create OpenCV Mat")
+    }
+    
+    // Test basic operations
+    img.SetTo(gocv.NewScalar(255, 0, 0, 0)) // Blue image
+    
+    // Convert to Go image
+    goImg, err := img.ToImage()
+    if err != nil {
+        t.Fatalf("failed to convert Mat to Go image: %v", err)
+    }
+    if goImg == nil {
+        t.Fatal("failed to convert Mat to Go image")
+    }
+    
+    t.Log("Basic OpenCV functionality works")
 }
 
 
