@@ -4,6 +4,10 @@
 *.weights
 *.onnx
 *.tar.gz
+*.prototxt
+
+# PyTorch model weights
+py/yolov8n.pt
 
 # macOS files
 .DS_Store
@@ -14,4 +18,16 @@ output.jpg
 
 /m-backup
 
+# Python virtual environments and caches
 .venv
+py/.venv
+__pycache__/
+py/**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+py/.pytest_cache/
+
+# uv lockfile is committed; ignore build artifacts if any
+py/.python-version

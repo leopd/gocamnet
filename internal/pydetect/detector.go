@@ -50,7 +50,11 @@ func New(ctx context.Context, projectRoot string, score float32) (*Detector, err
 	pyDir := filepath.Join(projectRoot, "py")
 	server := filepath.Join(pyDir, "server.py")
 
-	d.cmd = exec.CommandContext(dctx, "uv", "run", server, "--host", "127.0.0.1", "--port", fmt.Sprintf("%d", d.port), "--score", fmt.Sprintf("%.3f", d.score))
+	args := []string{"run", server, "--host", "127.0.0.1", "--port", fmt.Sprintf("%d", d.port), "--score", fmt.Sprintf("%.3f", d.score)}
+	if os.Getenv("PYDETECT_MOCK") == "1" {
+		args = append(args, "--mock")
+	}
+	d.cmd = exec.CommandContext(dctx, "uv", args...)
 	d.cmd.Dir = pyDir
 	d.cmd.Env = append(os.Environ(), "PYTHONUNBUFFERED=1")
 
@@ -167,7 +171,7 @@ func (d *Detector) Detect(mat gocv.Mat, frameID uint64) ([]Detection, error) {
 		Dets    []struct {
 			ClassID   int     `msgpack:"class_id"`
 			ClassName string  `msgpack:"class_name"`
-			Score     float32 `msgpack:"score"`
+			Score     float64 `msgpack:"score"`
 			Box       [4]int  `msgpack:"box"`
 		} `msgpack:"dets"`
 	}
@@ -178,7 +182,7 @@ func (d *Detector) Detect(mat gocv.Mat, frameID uint64) ([]Detection, error) {
 	for _, d2 := range resp.Dets {
 		out = append(out, Detection{
 			Box:       image.Rect(d2.Box[0], d2.Box[1], d2.Box[2], d2.Box[3]),
-			Score:     d2.Score,
+			Score:     float32(d2.Score),
 			ClassID:   d2.ClassID,
 			ClassName: d2.ClassName,
 		})

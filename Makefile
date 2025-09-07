@@ -30,7 +30,7 @@ ifneq ($(s),)
   RUN_ARGS += -s $(s)
 endif
 
-.PHONY: all build run run-sample-image run-camera list-cameras test clean install python-uv-install python-sync clean-models
+.PHONY: all build run run-sample-image run-camera list-cameras test test-go test-py clean install python-uv-install python-sync clean-models
 
 all: build
 
@@ -53,8 +53,13 @@ run-camera:
 list-cameras:
 	./$(NAME) --list-cameras $(RUN_ARGS)
 
-test:
+test: test-go test-py
+
+test-go:
 	go test -v ./...
+
+test-py: python-sync
+	@cd py && uv run python -m pytest
 
 install: python-uv-install python-sync
 
