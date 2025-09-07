@@ -1,6 +1,6 @@
 # GoCamNet
 
-A Go executable that demonstrates OpenCV integration for computer vision tasks.
+A Go executable that demonstrates OpenCV integration for computer vision tasks, with PyTorch object detection managed as a subprocess.
 
 ## Features
 
@@ -13,16 +13,16 @@ A Go executable that demonstrates OpenCV integration for computer vision tasks.
 
 ## Usage
 
-This project uses a `Makefile` to simplify common operations.
+This project uses a `Makefile` to simplify common operations. The Go program manages a local PyTorch detector (YOLOv8n) via a lightweight TCP IPC; no TensorFlow/ONNX/Caffe is used.
 
 ```bash
-# Build the executable
-make build
+# Install Python env (uv) and sync dependencies, then build
+make install && make build
 
 # Generate a sample image
 make run-sample-image
 
-# Display the primary camera feed (press any key to exit)
+# Display the primary camera feed (press any key to exit). The Go binary will spawn the PyTorch process automatically.
 make run-camera
 
 # List available cameras
@@ -45,7 +45,7 @@ make install
 
 ## Development
 
-This project uses GoCV, which requires OpenCV to be installed on your system. Please see `setup-mac.sh` for macOS instructions.
+This project uses GoCV, which requires OpenCV to be installed on your system. Please see `setup-mac.sh` for macOS instructions. PyTorch dependencies are managed by `uv` from the `py/pyproject.toml`.
 
 Build the project using the Makefile:
 ```sh
@@ -54,32 +54,16 @@ make build
 
 ## Testing
 
-The test suite includes a Deep Neural Network (DNN) based test that requires a pre-trained model. Due to the instability of public model download links, you must download the required model files manually.
-
-**To run the full test suite:**
-
-1.  **Download Model Files:**
-    *   The required model architecture file, `MobileNetSSD_deploy.prototxt`, is included in this repository in the `models/` directory.
-    *   You only need to download the corresponding model weights file: `MobileNetSSD_deploy.caffemodel`.
-    *   A reliable source for this file is the repository at: `https://github.com/chuanqi305/MobileNet-SSD`
-
-2.  **Place Files:**
-    *   Ensure the `models/` directory contains both `MobileNetSSD_deploy.prototxt` (included) and `MobileNetSSD_deploy.caffemodel` (which you downloaded).
-
-3.  **Run Tests:**
-    Once both model files are in place, run the tests using the Makefile:
-    ```sh
-    make test
-    ```
-
-Without the model files, the DNN test will be automatically skipped.
+Unit tests for basic OpenCV operations and image generation remain. DNN tests were removed with the migration to a managed PyTorch subprocess.
 
 ## Project Structure
 
 ```
 gocamnet/
-├── main.go          # Main application entry point
-├── main_test.go     # Unit tests for main package
+├── cmd/gocamnet/main.go   # Main application entry point
+├── main_test.go           # Unit tests for sample image & camera utilities
+├── internal/pydetect/     # Go-managed PyTorch subprocess and IPC client
+├── py/                    # Python inference server (YOLOv8n) managed by uv
 ├── go.mod           # Go module definition
 ├── .gitignore       # Git ignore patterns
 ├── README.md        # This file
@@ -90,4 +74,4 @@ gocamnet/
 
 ## For AI Agents
 
-**IMPORTANT**: All AI agents working on this project must read the [AGENT.md](AGENT.md) file before making any changes. This file contains critical instructions that must be followed for every modification to ensure code quality and proper documentation.
+**IMPORTANT**: All AI agents working on this project must read the [AGENT.md](AGENT.md) file before making any changes. Always build via the Makefile so CGO/OpenCV env is set, and use `make install` to provision the Python `uv` environment under `py/`.

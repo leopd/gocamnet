@@ -6,7 +6,7 @@ This file contains essential instructions for any AI agent working on this GoCam
 
 ## Project Overview
 
-GoCamNet is a Go executable that demonstrates OpenCV integration for computer vision tasks, specifically focused on camera operations and image generation.
+GoCamNet is a Go executable that demonstrates OpenCV integration for computer vision tasks, specifically focused on camera operations and image generation. Object detection is handled by a managed PyTorch subprocess (YOLOv8n) launched by the Go program.
 
 ## Current Features
 
@@ -44,23 +44,26 @@ GoCamNet is a Go executable that demonstrates OpenCV integration for computer vi
 
 ```
 gocamnet/
-├── main.go          # Main application entry point
-├── main_test.go     # Unit tests for main package
-├── go.mod           # Go module definition
-├── Makefile         # Project build, run, and test commands
-├── README.md        # Project documentation
-├── AGENT.md         # This file - agent instructions
-└── setup-mac.sh     # macOS setup script
+├── cmd/gocamnet/main.go  # Main application entry point
+├── main_test.go          # Unit tests for sample image & camera utils
+├── internal/pydetect/    # Go-managed PyTorch subprocess & IPC
+├── py/                   # Python YOLO server managed by uv
+├── go.mod                # Go module definition
+├── Makefile              # Project build, run, and test commands
+├── README.md             # Project documentation
+├── AGENT.md              # This file - agent instructions
+└── setup-mac.sh          # macOS setup script
 ```
 
 ## Available Make Targets
 
-- `make build` - Build the executable
+- `make build` - Build the executable (from `cmd/gocamnet`)
 - `make run-sample-image` - Generate a sample image
 - `make run-camera` - Display camera feed
 - `make list-cameras` - List available cameras
 - `make test` - Run tests
 - `make clean` - Clean build artifacts
+- `make install` - Install `uv` and sync Python deps under `py/`
 
 ## Important Notes
 
@@ -75,6 +78,7 @@ gocamnet/
 - Do NOT run `go build` or `go test` directly. Use:
   - `make build`
   - `make test`
+  - `make run-camera`
 - Rationale: the Makefile exports `GOOS`, `GOARCH`, `CGO_ENABLED`, `CC`, `CXX`, `CGO_*FLAGS`, and sets `PKG_CONFIG_PATH` (e.g., to Homebrew's OpenCV on macOS arm64). Running `go test` directly may fail to link OpenCV even though `make test` works.
 
 ## REMINDER
@@ -106,3 +110,7 @@ Running `go build` or `go test` directly from the command line without these env
 ### Testing: NEVER Remove or Disable Failing Tests
 
 **CRITICAL**: Under no circumstances should a failing test be removed, deleted, disabled, or skipped (e.g., using `t.Skipf`) as a method for making the test suite pass. A failing test indicates a regression or a flaw in the implementation. The only valid solution is to fix the underlying code or the test itself until it passes correctly. Removing a test to achieve a "green" build is a critical failure of duty and is strictly forbidden.
+
+## Agent mode vs ask mode
+
+If you don't have a tool to change source files, tell the user to change into agent mode, or do whatever is needed to enable you to change the source.  NEVER blabber source code into the chat window expecting the user to copy/paste it into the source code.  You've been stupid like this before.  Try not to be so stupid.
