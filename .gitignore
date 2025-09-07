@@ -111,3 +111,6 @@ secrets/
 # Backup files
 *.bak
 *.backup
+
+# ML Models (downloaded at build time)
+models/

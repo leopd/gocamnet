@@ -2,6 +2,12 @@ NAME := gocamnet
 OS := $(shell uname -s)
 ARCH := $(shell uname -m)
 
+# Model download location (not checked into source control)
+MODEL_DIR := models
+MODEL_FILE := yolov5s.onnx
+MODEL_URL := https://github.com/ultralytics/yolov5/releases/download/v6.0/$(MODEL_FILE)
+MODEL_PATH := $(MODEL_DIR)/$(MODEL_FILE)
+
 # Configure environment for macOS arm64 (Apple Silicon)
 ifeq ($(OS),Darwin)
   ifeq ($(ARCH),arm64)
@@ -26,11 +32,11 @@ ifneq ($(s),)
   RUN_ARGS += -s $(s)
 endif
 
-.PHONY: all build run run-sample-image run-camera list-cameras test clean install
+.PHONY: all build run run-sample-image run-camera list-cameras test clean install model download-model
 
 all: build
 
-build:
+build: model
 ifeq ($(OS), Darwin)
 	go build -ldflags="-s -w" -o $(NAME)
 else
@@ -49,7 +55,7 @@ run-camera:
 list-cameras:
 	./$(NAME) --list-cameras $(RUN_ARGS)
 
-test:
+test: model
 	go test -v ./...
 
 install:
@@ -65,3 +71,15 @@ clean:
 	go clean
 	rm -f $(NAME)
 	rm -f output.jpg
+
+# Download the YOLO model if not present
+model: download-model
+
+download-model:
+	@mkdir -p $(MODEL_DIR)
+	@if [ ! -f "$(MODEL_PATH)" ]; then \
+		echo "Downloading model to $(MODEL_PATH) ..."; \
+		curl -L "$(MODEL_URL)" -o "$(MODEL_PATH)"; \
+	else \
+		echo "Model already present at $(MODEL_PATH)"; \
+	fi
