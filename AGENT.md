@@ -87,3 +87,22 @@ gocamnet/
 5. Follow the established patterns and conventions
 
 **FAILURE TO FOLLOW THESE INSTRUCTIONS WILL RESULT IN BROKEN CODE AND POOR DOCUMENTATION.**
+
+## Agent Instructions for GoCamNet Project
+
+This document provides critical guidelines for AI agents working on the GoCamNet repository. Adherence to these rules is mandatory.
+
+### CGO/OpenCV Environment: Always use the Makefile
+
+**CRITICAL**: When working on macOS arm64 (Apple Silicon), the `Makefile` sets essential CGO environment variables (e.g., `CGO_CFLAGS`, `CGO_LDFLAGS`, `PKG_CONFIG_PATH`) that are required for GoCV to correctly link against your Homebrew-installed OpenCV libraries.
+
+**DO NOT run `go build` or `go test` directly.** Always use the `make` targets:
+- `make build`
+- `make test`
+- `make run`
+
+Running `go build` or `go test` directly from the command line without these environment variables will result in linker errors because the Go compiler will not be able to find the necessary OpenCV libraries.
+
+### Testing: NEVER Remove or Disable Failing Tests
+
+**CRITICAL**: Under no circumstances should a failing test be removed, deleted, disabled, or skipped (e.g., using `t.Skipf`) as a method for making the test suite pass. A failing test indicates a regression or a flaw in the implementation. The only valid solution is to fix the underlying code or the test itself until it passes correctly. Removing a test to achieve a "green" build is a critical failure of duty and is strictly forbidden.

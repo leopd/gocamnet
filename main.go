@@ -154,6 +154,8 @@ func runShowCamera(cameraIndex int) {
 	// FPS tracking variables
 	frameCount := 0
 	lastReportTime := time.Now()
+	var totalInferenceTime time.Duration
+	inferenceCount := 0
 
 	for {
 		if ok := webcam.Read(&img); !ok {
@@ -165,7 +167,11 @@ func runShowCamera(cameraIndex int) {
 		}
 
 		// --- Perform Detection ---
+		inferenceStart := time.Now()
 		detections, err := detector.Detect(img)
+		totalInferenceTime += time.Since(inferenceStart)
+		inferenceCount++
+
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Detection error: %v\n", err)
 			continue // Don't crash, just skip this frame
@@ -191,9 +197,15 @@ func runShowCamera(cameraIndex int) {
 		if currentTime.Sub(lastReportTime) >= 5*time.Second {
 			elapsed := currentTime.Sub(lastReportTime)
 			fps := float64(frameCount) / elapsed.Seconds()
-			fmt.Printf("FPS: %.2f (frames: %d, elapsed: %.1fs)\n", fps, frameCount, elapsed.Seconds())
+			avgInferenceMs := float64(0)
+			if inferenceCount > 0 {
+				avgInferenceMs = float64(totalInferenceTime.Milliseconds()) / float64(inferenceCount)
+			}
+			fmt.Printf("FPS: %.2f (Avg Inference: %.2f ms)\n", fps, avgInferenceMs)
 			// Reset frame count and update last report time
 			frameCount = 0
+			inferenceCount = 0
+			totalInferenceTime = 0
 			lastReportTime = currentTime
 		}
 		

@@ -137,46 +137,54 @@ type Detection struct {
 // Detect runs detection on the given BGR Mat (e.g., from camera frames).
 // The input Mat is not modified.
 func (d *Detector) Detect(src gocv.Mat) ([]Detection, error) {
-    if src.Empty() {
-        return nil, errors.New("empty input image")
-    }
+	if src.Empty() {
+		return nil, errors.New("empty input image")
+	}
 
-    if d.modelType == "darknet" {
-        // YOLOv3-tiny style preprocessing
-        blob := gocv.BlobFromImage(src, 1.0/255.0, d.inputSize, gocv.NewScalar(0, 0, 0, 0), true, false)
-        defer blob.Close()
-        d.net.SetInput(blob, "")
-        // Forward default output
-        outs := d.net.ForwardLayers(d.net.GetLayerNames())
-        // Do not parse; just ensure forward completes and clean up
-        for _, o := range outs { o.Close() }
-        return nil, nil
-    }
+	// Default SSD-style path
+	// Parameters from a known-working implementation (e.g., PyImageSearch):
+	// scalefactor: 0.007843, size: (300, 300), mean: (127.5, 127.5, 127.5), swapRB: true
+	blob := gocv.BlobFromImage(src, 0.007843, d.inputSize, gocv.NewScalar(127.5, 127.5, 127.5, 0), true, false)
+	defer blob.Close()
 
-    // Default SSD-style path
-    blob := gocv.BlobFromImage(src, 1.0/127.5, d.inputSize, gocv.NewScalar(127.5, 127.5, 127.5, 0), true, false)
-    defer blob.Close()
-    d.net.SetInput(blob, "")
-    det := d.net.Forward("")
-    defer det.Close()
-    if det.Empty() { return nil, nil }
-    total := int(det.Total())
-    if total%7 != 0 { return nil, errors.New("unexpected detection output shape") }
-    det = det.Reshape(1, total/7)
-    imgW := src.Cols(); imgH := src.Rows()
-    var results []Detection
-    rows := det.Rows()
-    for i := 0; i < rows; i++ {
-        classID := int(det.GetFloatAt(i, 1))
-        conf := det.GetFloatAt(i, 2)
-        if conf < d.scoreThreshold { continue }
-        left := int(det.GetFloatAt(i, 3) * float32(imgW))
-        top := int(det.GetFloatAt(i, 4) * float32(imgH))
-        right := int(det.GetFloatAt(i, 5) * float32(imgW))
-        bottom := int(det.GetFloatAt(i, 6) * float32(imgH))
-        results = append(results, Detection{ Box: image.Rect(left, top, right, bottom), Score: conf, ClassID: classID, ClassName: d.className(classID) })
-    }
-    return results, nil
+	d.net.SetInput(blob, "")
+	det := d.net.Forward("")
+	defer det.Close()
+
+	if det.Empty() {
+		return nil, nil
+	}
+	total := int(det.Total())
+	if total%7 != 0 {
+		return nil, errors.New("unexpected detection output shape")
+	}
+
+	det = det.Reshape(1, total/7)
+	imgW := src.Cols()
+	imgH := src.Rows()
+
+	var results []Detection
+	rows := det.Rows()
+	for i := 0; i < rows; i++ {
+		confidence := det.GetFloatAt(i, 2)
+		if confidence < d.scoreThreshold {
+			continue
+		}
+
+		classID := int(det.GetFloatAt(i, 1))
+		left := int(det.GetFloatAt(i, 3) * float32(imgW))
+		top := int(det.GetFloatAt(i, 4) * float32(imgH))
+		right := int(det.GetFloatAt(i, 5) * float32(imgW))
+		bottom := int(det.GetFloatAt(i, 6) * float32(imgH))
+
+		results = append(results, Detection{
+			Box:       image.Rect(left, top, right, bottom),
+			Score:     confidence,
+			ClassID:   classID,
+			ClassName: d.className(classID),
+		})
+	}
+	return results, nil
 }
 
 func (d *Detector) className(id int) string {

@@ -53,6 +53,55 @@ func TestDetectorLoadsAndRuns(t *testing.T) {
 	t.Logf("detections returned: %d", len(detections))
 }
 
+func TestPersonDetection(t *testing.T) {
+	// --- Load Model ---
+	protoPath := filepath.Join("..", "models", "MobileNetSSD_deploy.prototxt")
+	modelPath := filepath.Join("..", "models", "MobileNetSSD_deploy.caffemodel")
+
+	if _, err := os.Stat(modelPath); err != nil {
+		t.Fatalf("Caffe model not found; this test requires it: %v", err)
+	}
+
+	det, err := NewDetector(Options{
+		ModelProto:     protoPath,
+		ModelWeights:   modelPath,
+		ScoreThreshold: 0.2, // Lower threshold for this specific image
+	})
+	if err != nil {
+		t.Fatalf("NewDetector error: %v", err)
+	}
+	defer det.Close()
+
+	// --- Load Image ---
+	imgPath := filepath.Join("..", "fixtures", "soccer-people.jpeg")
+	img := gocv.IMRead(imgPath, gocv.IMReadColor)
+	if img.Empty() {
+		t.Fatalf("Failed to read image: %s", imgPath)
+	}
+	defer img.Close()
+
+	// --- Detect People ---
+	detections, err := det.Detect(img)
+	if err != nil {
+		t.Fatalf("Detect error: %v", err)
+	}
+
+	personCount := 0
+	for _, d := range detections {
+		t.Logf("Diagnostic: Detected class %d (%s) with confidence %.4f", d.ClassID, d.ClassName, d.Score)
+		if d.ClassID == 15 { // 15 is "person"
+			personCount++
+		}
+	}
+
+	if personCount != 3 {
+		t.Errorf("Expected to detect 3 people, but found %d", personCount)
+	} else {
+		t.Logf("Successfully detected %d people.", personCount)
+	}
+}
+
+
 // TestBasicOpenCVWorks tests that basic OpenCV functionality works without DNN
 func TestBasicOpenCVWorks(t *testing.T) {
     // Test that basic OpenCV functionality works without DNN
