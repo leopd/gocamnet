@@ -2,6 +2,9 @@ import argparse
 import socket
 import struct
 import threading
+import traceback
+from typing import Optional
+
 import msgpack
 import numpy as np
 import torch
@@ -12,15 +15,17 @@ HDR_SIZE = struct.calcsize(HDR_FMT)
 FMT_BGR = 0
 
 
-def load_model(mock: bool):
+def load_model(mock: bool) -> Optional[YOLO]:
+    """Load and prepare the YOLO model for inference."""
     if mock:
         return None
-    
+
     # Load YOLO model
     model = YOLO("yolov8n.pt")
-    
+
     # Move to appropriate device
     if torch.backends.mps.is_available():
+        # Apple Silicon MPS backend
         model.to("mps")
         device = "mps"
     elif torch.cuda.is_available():
@@ -28,27 +33,29 @@ def load_model(mock: bool):
         device = "cuda"
     else:
         device = "cpu"
-    
+
     # Optimize model for inference
     model.model.eval()  # Set to evaluation mode
-    
+
     # Use torch.compile for PyTorch 2.0+ (significant speedup)
-    if hasattr(torch, 'compile') and device != "mps":  # MPS doesn't support compile yet
+    if device != "mps":  # MPS doesn't support compile yet
         try:
             model.model = torch.compile(model.model, mode="reduce-overhead")
             print(f"Model compiled with torch.compile on {device}")
         except Exception as e:
+            traceback.print_exc()
             print(f"torch.compile failed: {e}, using regular model")
-    
+
     # Enable optimizations
     torch.backends.cudnn.benchmark = True if device == "cuda" else False
     torch.backends.cudnn.deterministic = False if device == "cuda" else True
-    
+
     print(f"Model loaded on {device} with optimizations")
     return model
 
 
-def handle_client(conn, addr, model, score_thresh: float, mock: bool):
+def handle_client(conn: socket.socket, addr: tuple[str, int], model: Optional[YOLO], score_thresh: float, mock: bool):
+    """Handle a single client connection, receiving frames and sending back detections."""
     try:
         while True:
             hdr = conn.recv(HDR_SIZE)
@@ -98,6 +105,7 @@ def handle_client(conn, addr, model, score_thresh: float, mock: bool):
 
 
 def run_server(host: str, port: int, score_thresh: float, mock: bool):
+    """Set up and run the main TCP server loop."""
     model = load_model(mock)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
