@@ -81,7 +81,6 @@ func TestPersonDetectionWithFixture(t *testing.T) {
 		}
 	}
 
-	// Expect to find at least 2 people in the soccer image
 	if personCount != 3 {
 		t.Errorf("Expected 3 people, found %d", personCount)
 	} else {
