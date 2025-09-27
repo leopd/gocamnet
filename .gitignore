@@ -13,7 +13,7 @@ py/yolov8n.pt
 .DS_Store
 
 # GoCamNet executable
-gocamnet
+/gocamnet
 output.jpg
 
 /m-backup
