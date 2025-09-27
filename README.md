@@ -1,15 +1,13 @@
 # GoCamNet
 
-A Go executable that demonstrates OpenCV integration for computer vision tasks, with PyTorch object detection managed as a subprocess.
+Simple Camera -> Neural Network -> Display program written in Golang, with OpenCV.  Calls a separate python process for the NN.
 
-## Features
+To try it out:
 
-- Generate sample images using OpenCV
-- Display the primary camera feed with optimized performance (30+ FPS)
-- Real-time FPS monitoring and reporting
-- Camera selection and discovery
-- Command-line argument parsing with both long and short forms
-- Input validation
+```
+make install
+make run-camera
+```
 
 ## Usage
 
