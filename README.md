@@ -5,7 +5,6 @@ Simple Camera -> Neural Network -> Display program written in Golang, with OpenC
 To try it out:
 
 ```
-make setup-os
 make install
 make run-camera
 ```
@@ -34,26 +33,21 @@ make list-cameras
 ./gocamnet -h
 ```
 
-## Setup (macOS)
+## Install (macOS and Raspberry Pi)
 
-To set up the development environment and install dependencies like OpenCV 4, run the macOS setup target:
+Use a single command to provision OS dependencies (OpenCV, build tools), install Go and `uv`, and sync Python deps:
 
 ```bash
 make install
 ```
 
-## Setup (Raspberry Pi)
-
-To set up dependencies on a Raspberry Pi (Ubuntu/Debian), run:
+Advanced usage (optional granular targets):
 
 ```bash
-./setup-rpi.sh
-```
-
-Then build and run as usual:
-
-```bash
-make install && make build
+make install-os    # Detects OS and runs setup-mac.sh or setup-rpi.sh
+make install-go    # Ensures Go >= go.mod version is installed
+make install-uv    # Ensures uv is installed
+make build         # Builds the Go binary
 ```
 
 If you are on a headless system, `--show-camera` requires a desktop/X11 session. You can still validate the pipeline with:
@@ -64,7 +58,7 @@ PYDETECT_MOCK=1 ./gocamnet --show-camera
 
 ## Development
 
-This project uses GoCV, which requires OpenCV to be installed on your system. Please see `setup-mac.sh` for macOS instructions. PyTorch dependencies are managed by `uv` from the `py/pyproject.toml`.
+This project uses GoCV, which requires OpenCV to be installed on your system. `make install` will provision OpenCV and prerequisites via OS-specific scripts. PyTorch dependencies are managed by `uv` from the `py/pyproject.toml`.
 
 Build the project using the Makefile:
 ```sh

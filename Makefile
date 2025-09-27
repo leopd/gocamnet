@@ -30,7 +30,7 @@ ifneq ($(s),)
   RUN_ARGS += -s $(s)
 endif
 
-.PHONY: all build run run-sample-image run-camera list-cameras test test-go test-py clean install python-uv-install python-sync clean-models setup-os
+.PHONY: all build run run-sample-image run-camera list-cameras test test-go test-py clean install install-os install-go install-uv python-sync clean-models setup-os
 
 all: build
 
@@ -61,19 +61,21 @@ test-go:
 test-py: python-sync
 	@cd py && uv run python -m pytest
 
-install: python-uv-install python-sync
+install: install-os install-go install-uv python-sync
 
-python-uv-install:
+install-uv:
 	@if ! command -v uv >/dev/null 2>&1; then \
 	  if command -v brew >/dev/null 2>&1; then \
 	    echo "Installing uv via Homebrew..."; brew install uv; \
 	  else \
 	    echo "Installing uv via official script..."; \
 	    curl -LsSf https://astral.sh/uv/install.sh | sh; \
-	  fi \
+	  fi; \
+	else \
+	  echo "uv already installed: $$(uv --version)"; \
 	fi
 
-python-sync: python-uv-install
+python-sync: install-uv
 	@cd py && uv sync
 
 clean:
@@ -85,9 +87,8 @@ clean:
 clean-models:
 	rm -rf models
 
-# OS provisioning helper: install system deps on macOS or Raspberry Pi only
-setup-os:
-	@echo "Detecting OS for setup..."
+install-os:
+	@echo "Detecting OS for install..."
 	@if [ "$(OS)" = "Darwin" ]; then \
 		echo "Detected macOS"; \
 		./setup-mac.sh; \
@@ -99,10 +100,31 @@ setup-os:
 			echo "Detected Linux on ARM (assuming Raspberry Pi)"; \
 			./setup-rpi.sh; \
 		else \
-			echo "Error: setup-os supports only macOS or Raspberry Pi"; \
+			echo "Error: install-os supports only macOS or Raspberry Pi"; \
 			exit 1; \
 		fi; \
 	else \
-		echo "Error: setup-os supports only macOS or Raspberry Pi"; \
+		echo "Error: install-os supports only macOS or Raspberry Pi"; \
 		exit 1; \
+	fi
+
+# Back-compat alias; will be removed later
+setup-os: install-os
+
+install-go:
+	@echo "Ensuring Go toolchain is installed..."
+	@if command -v go >/dev/null 2>&1; then \
+	  echo "Go already installed: $$(go version)"; \
+	else \
+	  if [ "$(OS)" = "Darwin" ] && command -v brew >/dev/null 2>&1; then \
+	    echo "Installing Go via Homebrew..."; \
+	    brew install go; \
+	  elif [ "$(OS)" = "Linux" ]; then \
+	    echo "Installing Go via apt..."; \
+	    sudo apt-get update -y; \
+	    sudo apt-get install -y golang-go; \
+	  else \
+	    echo "Please install Go manually for OS $(OS)"; \
+	    exit 1; \
+	  fi; \
 	fi

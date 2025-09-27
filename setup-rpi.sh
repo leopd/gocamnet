@@ -40,13 +40,7 @@ else
   echo "Warning: Go is not installed. Install a recent Go toolchain before building."
 fi
 
-echo "Ensuring 'uv' (Python tool) is installed..."
-if ! command -v uv >/dev/null 2>&1; then
-  echo "Installing uv via official script..."
-  curl -LsSf https://astral.sh/uv/install.sh | sh
-else
-  echo "uv is already installed."
-fi
+echo "Skipping 'uv' installation here; handled by 'make install' (install-uv)."
 
 cat <<'EON'
 

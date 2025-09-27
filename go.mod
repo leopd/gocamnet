@@ -1,6 +1,6 @@
 module gocamnet
 
-go 1.24.5
+go 1.23
 
 require gocv.io/x/gocv v0.42.0
 
