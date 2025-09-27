@@ -30,7 +30,7 @@ ifneq ($(s),)
   RUN_ARGS += -s $(s)
 endif
 
-.PHONY: all build run run-sample-image run-camera list-cameras test test-go test-py clean install python-uv-install python-sync clean-models
+.PHONY: all build run run-sample-image run-camera list-cameras test test-go test-py clean install python-uv-install python-sync clean-models setup-os
 
 all: build
 
@@ -84,3 +84,25 @@ clean:
 # Optional: remove legacy models directory
 clean-models:
 	rm -rf models
+
+# OS provisioning helper: install system deps on macOS or Raspberry Pi only
+setup-os:
+	@echo "Detecting OS for setup..."
+	@if [ "$(OS)" = "Darwin" ]; then \
+		echo "Detected macOS"; \
+		./setup-mac.sh; \
+	elif [ "$(OS)" = "Linux" ]; then \
+		if [ -f /proc/device-tree/model ] && grep -qi 'raspberry pi' /proc/device-tree/model; then \
+			echo "Detected Raspberry Pi"; \
+			./setup-rpi.sh; \
+		elif uname -m | grep -Eq '^(armv7l|aarch64|arm64)$$'; then \
+			echo "Detected Linux on ARM (assuming Raspberry Pi)"; \
+			./setup-rpi.sh; \
+		else \
+			echo "Error: setup-os supports only macOS or Raspberry Pi"; \
+			exit 1; \
+		fi; \
+	else \
+		echo "Error: setup-os supports only macOS or Raspberry Pi"; \
+		exit 1; \
+	fi
