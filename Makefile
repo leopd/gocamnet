@@ -112,48 +112,19 @@ install-os:
 setup-os: install-os
 
 install-go:
-	@echo "Ensuring Go toolchain (>= 1.24.5) is installed..."
+	@echo "Ensuring Go toolchain is installed..."
 	@if command -v go >/dev/null 2>&1; then \
-	  CUR=$$(go version | awk '{print $$3}' | sed 's/^go//'); \
-	  REQ=1.24.5; \
-	  if [ -n "$$CUR" ] && [ "$$REQ" = "$$CUR" -o "$$REQ" = "$$$(printf '%s\n' $$REQ $$CUR | sort -V | head -n1)" ]; then \
-	    echo "Go already installed: $$(go version)"; \
-	  else \
-	    echo "Go too old ($$CUR), installing/upgrading..."; \
-	    $(MAKE) install-go-download; \
-	  fi; \
+	  echo "Go already installed: $$(go version)"; \
 	else \
-	  echo "Go not found, installing..."; \
-	  $(MAKE) install-go-download; \
-	fi
-
-install-go-download:
-	@if [ "$(OS)" = "Darwin" ] && command -v brew >/dev/null 2>&1; then \
-	  echo "Installing Go via Homebrew..."; \
-	  brew install go; \
-	elif [ "$(OS)" = "Linux" ]; then \
-	  ARCH=$$(uname -m); \
-	  case "$$ARCH" in \
-	    x86_64) GOARCH=amd64 ;; \
-	    aarch64|arm64) GOARCH=arm64 ;; \
-	    *) GOARCH= ;; \
-	  esac; \
-	  if [ -n "$$GOARCH" ]; then \
-	    REQ=1.24.5; \
-	    URL="https://go.dev/dl/go$$REQ.linux-$$GOARCH.tar.gz"; \
-	    echo "Downloading Go $$REQ for linux-$$GOARCH from $$URL"; \
-	    TMP=$$(mktemp -d); \
-	    curl -fsSL "$$URL" -o "$$TMP/go.tgz"; \
-	    sudo rm -rf /usr/local/go; \
-	    sudo tar -C /usr/local -xzf "$$TMP/go.tgz"; \
-	    rm -rf "$$TMP"; \
-	    echo "Installed: $$(/usr/local/go/bin/go version)"; \
-	  else \
-	    echo "Falling back to apt (unsupported arch $$ARCH)"; \
+	  if [ "$(OS)" = "Darwin" ] && command -v brew >/dev/null 2>&1; then \
+	    echo "Installing Go via Homebrew..."; \
+	    brew install go; \
+	  elif [ "$(OS)" = "Linux" ]; then \
+	    echo "Installing Go via apt..."; \
 	    sudo apt-get update -y; \
 	    sudo apt-get install -y golang-go; \
+	  else \
+	    echo "Please install Go manually for OS $(OS)"; \
+	    exit 1; \
 	  fi; \
-	else \
-	  echo "Please install Go manually for OS $(OS)"; \
-	  exit 1; \
 	fi
