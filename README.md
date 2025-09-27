@@ -6,6 +6,7 @@ To try it out:
 
 ```
 make install
+make build
 make run-camera
 ```
 
@@ -14,15 +15,6 @@ make run-camera
 This project uses a `Makefile` to simplify common operations. The Go program manages a local PyTorch detector (YOLOv8n) via a lightweight TCP IPC; no TensorFlow/ONNX/Caffe is used.
 
 ```bash
-# Install Python env (uv) and sync dependencies, then build
-make install && make build
-
-# Generate a sample image
-make run-sample-image
-
-# Display the primary camera feed (press any key to exit). The Go binary will spawn the PyTorch process automatically.
-make run-camera
-
 # List available cameras
 make list-cameras
 
@@ -115,4 +107,18 @@ Then you can push your changes to the remote repository:
 
 ```
 git push dashcampi main
+```
+
+# Troubleshooting
+
+See if the go bindings to opencv are working:
+
+```
+make run-sample-image
+```
+
+If that works, see if the camera is working:
+
+```
+make run-camera
 ```
