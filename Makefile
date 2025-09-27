@@ -30,7 +30,7 @@ ifneq ($(s),)
   RUN_ARGS += -s $(s)
 endif
 
-.PHONY: all build run run-sample-image run-camera list-cameras test test-go test-py clean install python-uv-install python-sync clean-models setup-os
+.PHONY: all build run run-sample-image run-camera list-cameras test test-go test-py clean install install-os install-go install-uv python-sync clean-models setup-os
 
 all: build
 
@@ -61,19 +61,21 @@ test-go:
 test-py: python-sync
 	@cd py && uv run python -m pytest
 
-install: python-uv-install python-sync
+install: install-os install-go install-uv python-sync
 
-python-uv-install:
+install-uv:
 	@if ! command -v uv >/dev/null 2>&1; then \
 	  if command -v brew >/dev/null 2>&1; then \
 	    echo "Installing uv via Homebrew..."; brew install uv; \
 	  else \
 	    echo "Installing uv via official script..."; \
 	    curl -LsSf https://astral.sh/uv/install.sh | sh; \
-	  fi \
+	  fi; \
+	else \
+	  echo "uv already installed: $$(uv --version)"; \
 	fi
 
-python-sync: python-uv-install
+python-sync: install-uv
 	@cd py && uv sync
 
 clean:
@@ -85,9 +87,8 @@ clean:
 clean-models:
 	rm -rf models
 
-# OS provisioning helper: install system deps on macOS or Raspberry Pi only
-setup-os:
-	@echo "Detecting OS for setup..."
+install-os:
+	@echo "Detecting OS for install..."
 	@if [ "$(OS)" = "Darwin" ]; then \
 		echo "Detected macOS"; \
 		./setup-mac.sh; \
@@ -99,10 +100,60 @@ setup-os:
 			echo "Detected Linux on ARM (assuming Raspberry Pi)"; \
 			./setup-rpi.sh; \
 		else \
-			echo "Error: setup-os supports only macOS or Raspberry Pi"; \
+			echo "Error: install-os supports only macOS or Raspberry Pi"; \
 			exit 1; \
 		fi; \
 	else \
-		echo "Error: setup-os supports only macOS or Raspberry Pi"; \
+		echo "Error: install-os supports only macOS or Raspberry Pi"; \
 		exit 1; \
+	fi
+
+# Back-compat alias; will be removed later
+setup-os: install-os
+
+install-go:
+	@echo "Ensuring Go toolchain (>= 1.24.5) is installed..."
+	@if command -v go >/dev/null 2>&1; then \
+	  CUR=$$(go version | awk '{print $$3}' | sed 's/^go//'); \
+	  REQ=1.24.5; \
+	  if [ -n "$$CUR" ] && [ "$$REQ" = "$$CUR" -o "$$REQ" = "$$$(printf '%s\n' $$REQ $$CUR | sort -V | head -n1)" ]; then \
+	    echo "Go already installed: $$(go version)"; \
+	  else \
+	    echo "Go too old ($$CUR), installing/upgrading..."; \
+	    $(MAKE) install-go-download; \
+	  fi; \
+	else \
+	  echo "Go not found, installing..."; \
+	  $(MAKE) install-go-download; \
+	fi
+
+install-go-download:
+	@if [ "$(OS)" = "Darwin" ] && command -v brew >/dev/null 2>&1; then \
+	  echo "Installing Go via Homebrew..."; \
+	  brew install go; \
+	elif [ "$(OS)" = "Linux" ]; then \
+	  ARCH=$$(uname -m); \
+	  case "$$ARCH" in \
+	    x86_64) GOARCH=amd64 ;; \
+	    aarch64|arm64) GOARCH=arm64 ;; \
+	    *) GOARCH= ;; \
+	  esac; \
+	  if [ -n "$$GOARCH" ]; then \
+	    REQ=1.24.5; \
+	    URL="https://go.dev/dl/go$$REQ.linux-$$GOARCH.tar.gz"; \
+	    echo "Downloading Go $$REQ for linux-$$GOARCH from $$URL"; \
+	    TMP=$$(mktemp -d); \
+	    curl -fsSL "$$URL" -o "$$TMP/go.tgz"; \
+	    sudo rm -rf /usr/local/go; \
+	    sudo tar -C /usr/local -xzf "$$TMP/go.tgz"; \
+	    rm -rf "$$TMP"; \
+	    echo "Installed: $$(/usr/local/go/bin/go version)"; \
+	  else \
+	    echo "Falling back to apt (unsupported arch $$ARCH)"; \
+	    sudo apt-get update -y; \
+	    sudo apt-get install -y golang-go; \
+	  fi; \
+	else \
+	  echo "Please install Go manually for OS $(OS)"; \
+	  exit 1; \
 	fi
