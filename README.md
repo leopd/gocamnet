@@ -73,3 +73,30 @@ gocamnet/
 ## For AI Agents
 
 **IMPORTANT**: All AI agents working on this project must read the [AGENT.md](AGENT.md) file before making any changes. Always build via the Makefile so CGO/OpenCV env is set, and use `make install` to provision the Python `uv` environment under `py/`.
+
+
+# Running on a remote Rasperry Pi
+
+If you want to run this as a dashcam, you might add the following to your `.git/config` file:
+
+```
+[remote "dashcampi"]
+    url = dashcampi:~/dev/gocamnet/
+    fetch = +refs/heads/*:refs/remotes/dashcampi/*
+```
+
+Then on the pi:
+
+```
+mkdir -p ~/dev/gocamnet/
+cd ~/dev/gocamnet/
+git init
+# Allow remote pushes to update the checked-out branch
+git config receive.denyCurrentBranch updateInstead
+```
+
+Then you can push your changes to the remote repository:
+
+```
+git push dashcampi main
+```
