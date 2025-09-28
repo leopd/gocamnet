@@ -18,6 +18,7 @@ sudo apt-get install -y --no-install-recommends \
   cmake \
   git \
   libopencv-dev \
+  libopencv-contrib-dev \
   libgtk-3-dev \
   libavcodec-dev \
   libavformat-dev \

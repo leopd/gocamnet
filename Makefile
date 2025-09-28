@@ -38,7 +38,7 @@ build:
 ifeq ($(OS), Darwin)
 	go build -ldflags="-s -w" -o $(NAME) ./cmd/gocamnet
 else
-	go build -o $(NAME) ./cmd/gocamnet
+	CGO_ENABLED=1 CGO_CXXFLAGS="$(CGO_CXXFLAGS) -include opencv2/aruco.hpp" go build -o $(NAME) ./cmd/gocamnet
 endif
 
 run:
