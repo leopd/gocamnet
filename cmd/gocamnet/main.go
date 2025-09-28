@@ -98,6 +98,15 @@ func runShowCamera(cameraIndex int) {
 		defer runtime.UnlockOSThread()
 	}
 
+	displayAvailable := hasDisplay()
+	if !displayAvailable {
+		if os.Getenv("QT_QPA_PLATFORM") == "" {
+			_ = os.Setenv("QT_QPA_PLATFORM", "offscreen")
+		}
+		fmt.Println("No display detected; running headless. Preview window disabled.")
+		fmt.Println("Press Ctrl+C to stop.")
+	}
+
 	// Start managed PyTorch detector
 	projectRoot, _ := os.Getwd()
 	detector, err := pydetect.New(context.Background(), projectRoot, 0.25)
@@ -108,8 +117,11 @@ func runShowCamera(cameraIndex int) {
 	defer detector.Close()
 	fmt.Println("Detector ready.")
 
-	win := gocv.NewWindow("GoCamNet Camera")
-	defer win.Close()
+	var win *gocv.Window
+	if displayAvailable {
+		win = gocv.NewWindow("GoCamNet Camera")
+		defer win.Close()
+	}
 
 	webcam, err := gocv.OpenVideoCapture(cameraIndex)
 	if err != nil {
@@ -131,7 +143,11 @@ func runShowCamera(cameraIndex int) {
 	img := gocv.NewMat()
 	defer img.Close()
 
-	fmt.Println("Camera opened successfully. Press any key to exit...")
+	if displayAvailable {
+		fmt.Println("Camera opened successfully. Press any key to exit...")
+	} else {
+		fmt.Println("Camera opened successfully. Streaming without preview...")
+	}
 
 	frameCount := 0
 	lastReportTime := time.Now()
@@ -164,7 +180,9 @@ func runShowCamera(cameraIndex int) {
 			}
 		}
 
-		win.IMShow(img)
+		if win != nil {
+			win.IMShow(img)
+		}
 
 		frameCount++
 
@@ -183,12 +201,34 @@ func runShowCamera(cameraIndex int) {
 			lastReportTime = currentTime
 		}
 
-		if key := win.WaitKey(1); key >= 0 {
-			break
+		if win != nil {
+			if key := win.WaitKey(1); key >= 0 {
+				break
+			}
+		} else {
+			time.Sleep(time.Millisecond * 33)
 		}
 	}
 
-	fmt.Println("Camera window closed")
+	if win != nil {
+		fmt.Println("Camera window closed")
+	} else {
+		fmt.Println("Camera session ended")
+	}
 }
 
-
+func hasDisplay() bool {
+	if os.Getenv("QT_QPA_PLATFORM") == "offscreen" {
+		return false
+	}
+	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+		return true
+	}
+	if os.Getenv("DISPLAY") != "" {
+		return true
+	}
+	if os.Getenv("WAYLAND_DISPLAY") != "" {
+		return true
+	}
+	return false
+}

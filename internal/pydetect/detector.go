@@ -63,7 +63,11 @@ func New(ctx context.Context, projectRoot string, score float32) (*Detector, err
 		cancel()
 		return nil, err
 	}
-	stderr, _ := d.cmd.StderrPipe()
+	stderr, err := d.cmd.StderrPipe()
+	if err != nil {
+		cancel()
+		return nil, err
+	}
 
 	if err := d.cmd.Start(); err != nil {
 		cancel()
@@ -108,13 +112,12 @@ func (d *Detector) Close() error {
 	if d.cancel != nil {
 		d.cancel()
 	}
-	if d.cmd != nil && d.cmd.Process != nil {
-		_ = d.cmd.Process.Kill()
-	}
+	shutdownProcess(d.cmd)
 	return nil
 }
 
 var hdrMagic = [4]byte{'G', 'C', 'N', '1'}
+
 const fmtBGR uint32 = 0
 
 // header: "GCN1"(4) + w(u32) h(u32) ch(u32) stride(u32) fmt(u32) frame_id(u64) data_len(u64)
@@ -190,4 +193,36 @@ func (d *Detector) Detect(mat gocv.Mat, frameID uint64) ([]Detection, error) {
 	return out, nil
 }
 
+func shutdownProcess(cmd *exec.Cmd) {
+	if cmd == nil {
+		return
+	}
+	if cmd.ProcessState != nil {
+		return
+	}
 
+	done := make(chan struct{})
+	go func() {
+		err := cmd.Wait()
+		if err != nil && !errors.Is(err, os.ErrProcessDone) {
+			// If Wait returns because we killed the process, ignore that error.
+			// Other errors are unusual but we cannot surface them anymore.
+		}
+		close(done)
+	}()
+
+	if cmd.Process != nil {
+		if err := cmd.Process.Signal(os.Interrupt); err != nil {
+			_ = cmd.Process.Kill()
+		}
+	}
+
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		if cmd.Process != nil {
+			_ = cmd.Process.Kill()
+		}
+		<-done
+	}
+}
