@@ -111,7 +111,8 @@ def run_server(host: str, port: int, score_thresh: float, mock: bool):
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((host, port))
     s.listen(1)
-    print("READY", flush=True)
+    actual_port = s.getsockname()[1]
+    print(f"READY {actual_port}", flush=True)
     try:
         while True:
             conn, addr = s.accept()

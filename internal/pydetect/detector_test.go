@@ -42,10 +42,12 @@ func TestIPCDetectMock(t *testing.T) {
 
 // TestPersonDetectionWithFixture tests detection on the soccer-people.jpeg fixture
 func TestPersonDetectionWithFixture(t *testing.T) {
-	// Skip if PYDETECT_MOCK is set (this test needs real YOLO)
-	if os.Getenv("PYDETECT_MOCK") == "1" {
-		t.Skip("Skipping real detection test in mock mode")
-	}
+    if os.Getenv("PYDETECT_RUN_REAL") != "1" {
+        t.Skip("Set PYDETECT_RUN_REAL=1 to exercise the real YOLO pipeline")
+    }
+    if os.Getenv("PYDETECT_MOCK") == "1" {
+        t.Skip("Skipping real detection test in mock mode")
+    }
 
 	// project root: repo root two dirs up from this file
 	_, file, _, _ := runtime.Caller(0)

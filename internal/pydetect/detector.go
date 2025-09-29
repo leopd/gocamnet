@@ -8,11 +8,12 @@ import (
 	"fmt"
 	"image"
 	"io"
-	"math/rand"
 	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/vmihailenco/msgpack/v5"
@@ -23,7 +24,6 @@ type Detector struct {
 	cmd     *exec.Cmd
 	conn    net.Conn
 	score   float32
-	port    int
 	cancel  context.CancelFunc
 	readyCh chan struct{}
 }
@@ -42,7 +42,6 @@ func New(ctx context.Context, projectRoot string, score float32) (*Detector, err
 	dctx, cancel := context.WithCancel(ctx)
 	d := &Detector{
 		score:   score,
-		port:    14000 + rand.Intn(1000),
 		cancel:  cancel,
 		readyCh: make(chan struct{}),
 	}
@@ -50,7 +49,7 @@ func New(ctx context.Context, projectRoot string, score float32) (*Detector, err
 	pyDir := filepath.Join(projectRoot, "py")
 	server := filepath.Join(pyDir, "server.py")
 
-	args := []string{"run", server, "--host", "127.0.0.1", "--port", fmt.Sprintf("%d", d.port), "--score", fmt.Sprintf("%.3f", d.score)}
+	args := []string{"run", server, "--host", "127.0.0.1", "--port", "0", "--score", fmt.Sprintf("%.3f", d.score)}
 	if os.Getenv("PYDETECT_MOCK") == "1" {
 		args = append(args, "--mock")
 	}
@@ -74,29 +73,55 @@ func New(ctx context.Context, projectRoot string, score float32) (*Detector, err
 		return nil, err
 	}
 
-	// Watch for READY
+	readyPortCh := make(chan int, 1)
+	readyErrCh := make(chan error, 1)
+
+	// Watch for READY and capture actual port
 	go func() {
 		sc := bufio.NewScanner(stdout)
 		for sc.Scan() {
 			line := sc.Text()
-			if line == "READY" {
+			if strings.HasPrefix(line, "READY") {
+				parts := strings.Fields(line)
+				if len(parts) < 2 {
+					readyErrCh <- errors.New("python server did not provide port")
+					return
+				}
+				value := parts[1]
+				port, err := strconv.Atoi(value)
+				if err != nil || port <= 0 {
+					readyErrCh <- fmt.Errorf("invalid READY port %q", value)
+					return
+				}
+				readyPortCh <- port
 				close(d.readyCh)
 				return
 			}
+			fmt.Fprintln(os.Stderr, line)
+		}
+		if err := sc.Err(); err != nil {
+			readyErrCh <- err
+		} else {
+			readyErrCh <- errors.New("python server exited before READY")
 		}
 	}()
 
 	// Surface server stderr to ours
 	go func() { _, _ = io.Copy(os.Stderr, stderr) }()
 
+	var port int
 	select {
-	case <-d.readyCh:
+	case port = <-readyPortCh:
+	case err := <-readyErrCh:
+		d.Close()
+		return nil, err
 	case <-time.After(15 * time.Second):
 		d.Close()
 		return nil, errors.New("python server failed to become ready")
 	}
 
-	conn, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", d.port), 5*time.Second)
+	addr := fmt.Sprintf("127.0.0.1:%d", port)
+	conn, err := net.DialTimeout("tcp", addr, 5*time.Second)
 	if err != nil {
 		d.Close()
 		return nil, fmt.Errorf("connect failed: %w", err)
@@ -203,10 +228,8 @@ func shutdownProcess(cmd *exec.Cmd) {
 
 	done := make(chan struct{})
 	go func() {
-		err := cmd.Wait()
-		if err != nil && !errors.Is(err, os.ErrProcessDone) {
-			// If Wait returns because we killed the process, ignore that error.
-			// Other errors are unusual but we cannot surface them anymore.
+		if err := cmd.Wait(); err != nil && !errors.Is(err, os.ErrProcessDone) {
+			// Process exited with an error; nothing further to do here.
 		}
 		close(done)
 	}()
