@@ -48,6 +48,16 @@ If you are on a headless system, `--show-camera` requires a desktop/X11 session.
 PYDETECT_MOCK=1 ./gocamnet --show-camera
 ```
 
+### Using the Pi's primary display over SSH
+
+When you SSH into a Raspberry Pi that is connected to a monitor, Qt will fail to open a window unless we point it at the console session. To reuse the primary display:
+
+```bash
+export DISPLAY=:0
+export XAUTHORITY=$HOME/.Xauthority
+./gocamnet --show-camera
+```
+
 ## Development
 
 This project uses GoCV, which requires OpenCV to be installed on your system. `make install` will provision OpenCV and prerequisites via OS-specific scripts. PyTorch dependencies are managed by `uv` from the `py/pyproject.toml`.
