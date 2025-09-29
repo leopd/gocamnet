@@ -10,6 +10,28 @@ make build
 make run-camera
 ```
 
+# Setting up Dash-cam on a Raspberry Pi
+
+1. Install the dependencies:
+
+```
+make install
+```
+
+2. Create a desktop file:
+
+```
+mkdir -p ~/.config/autostart
+ln -s $HOME/dev/gocamnet/dashcam.desktop ~/.config/autostart/dashcam.desktop
+```
+
+3. Start the dashcam:
+
+```
+./gocamnet --show-camera
+```
+
+
 ## Usage
 
 This project uses a `Makefile` to simplify common operations. The Go program manages a local PyTorch detector (YOLOv8n) via a lightweight TCP IPC; no TensorFlow/ONNX/Caffe is used.

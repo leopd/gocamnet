@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Dash-Cam Eye
+Comment=Dash-Cam pedestrian detection system
+Exec=/usr/bin/env bash -lc "cd \"$HOME/dev/gocamnet\" && DISPLAY=:0 XAUTHORITY=\"$HOME/.Xauthority\" ./gocamnet --show-camera"
+Terminal=false
+X-GNOME-Autostart-enabled=true
