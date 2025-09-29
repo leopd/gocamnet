@@ -25,14 +25,21 @@ mkdir -p ~/.config/autostart
 ln -s $HOME/dev/gocamnet/dashcam.desktop ~/.config/autostart/dashcam.desktop
 ```
 
-3. Start the dashcam:
+3. Test that it's working
 
 ```
 ./gocamnet --show-camera
 ```
 
+## TODO
 
-## Usage
+- Make it full-screen
+- Switch to NCNN for inference.  Lose all the python stuff.
+- Add logic for A-pillar pedestrians
+- Speed up RPI boot.
+
+
+# Usage
 
 This project uses a `Makefile` to simplify common operations. The Go program manages a local PyTorch detector (YOLOv8n) via a lightweight TCP IPC; no TensorFlow/ONNX/Caffe is used.
 
